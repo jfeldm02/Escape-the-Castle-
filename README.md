@@ -5,6 +5,13 @@ A manual application (no AI libraries) of Markov Decision Processes and reinforc
 ## Overview
 In this assignment, I used my knowledge of MDPs and reinforcement learning to play a game, *Escape the Castle*. The game is set on a 5x5 grid, where the player’s goal is to navigate from the top-left corner (grid position `(0,0)`) to the bottom-right corner (grid position `(4,4)`). The environment is populated with four hidden guards (whose positions are randomly initialized on every run). Each guard possesses distinct attributes, such as their strength in combat or perception ability in detecting players. The player can only discover a guard’s presence by entering the same cell as the guard. The game dynamics are governed by an underlying Markov Decision Process (MDP) with probabilistic movement and guard interactions.
 
+## Using the Code
+MBMC (Model Based Monte Carlo) executes purely random actions in the environment over a specified number of episodes and aggregates the data. This data is then used to determine the probability of defeating any of the four guards in battle (see game details below). 
+
+MFMC applies Q-Learning to teach the agent what the best rewarded action is in any game state. It uses an epsilon greedy approach where every iteration, the chances of a random action being executed decrease every game iteration and the chances of using the Q-Learning table to choose the historically best rewarded action from that state increase.
+
+Change the "flag" from False to True to visualize the game state board in either of these applications. In MFMC, uncomment the bottom section of code to visualize your Q-table implementation. You may need to manually source your pickle file as the code currently displays. 
+
 ## Grid Layout
 - The grid consists of 25 cells, numbered from `(0,0)` to `(4,4)`.
 - The player always starts in the top-left corner `(0,0)`.
