@@ -1,4 +1,4 @@
-import time
+#import time
 import pickle
 import numpy as np
 from vis_gym import *
@@ -74,87 +74,76 @@ def update(action):
 		refresh(obs, reward, done, info) # Update the game screen [GUI only]
 	return obs, reward, done, info
 
-def actionChoice(epsilon, hashedObs, Q_table):
-	if np.random.rand() < epsilon: # random action
-		pi_act = np.random.choice(len(env.actions)) # choosing a random string action 
+def actionChoice(epsilon, hashedObsS, Q_table):
+	if np.random.rand() <= epsilon: # random action
+		pi_act = np.random.choice(env.actions) # choosing a random string action 
+		pi_act = env.actions.index(pi_act)
 	else: # learned action 
-		pi_act = np.argmax(Q_table[hashedObs]) # taking the index integer of the highest valued action associated with the Q-table state  
+		pi_act = np.argmax(Q_table[hashedObsS]) # taking the index integer of the highest valued action associated with the Q-table state
 	return(pi_act)
 
 def Q_learning(num_episodes=10000, gamma=0.9, epsilon=1, decay_rate=0.999):
 	
-	Q_table = {}
+	Q_table ={}
 	pi_act = None 
 	num_updates = np.zeros((375,6))
 
 	for iter in range(num_episodes):
 		
-		print(iter)
+		#print(iter)
 		obs, reward, done, info = env.reset() # initialize game from scratch
 		epsilon = epsilon*decay_rate # set newly decayed epsilon
 
 		while not done: # while game is ongoing 
 
-			hashedObs = hash(obs) # caching hashed value for efficiency 
+			hashedObsS = hash(obs) # caching hashed value for efficiency 
 
-			if hashedObs not in Q_table:	# dynamically and parallely initalizing Q_table and num_updates table to make sure both align and are set up the same way
-				Q_table[hashedObs] = np.zeros(6)
+			if hashedObsS not in Q_table:
+				Q_table[hashedObsS] = np.zeros(len(env.actions))
 
-			pi_act = actionChoice(epsilon, hashedObs, Q_table) # see function above 
+			pi_act = actionChoice(epsilon, hashedObsS, Q_table) # see function above 
 
-			num_updates[hashedObs-1][pi_act] += 1  # adding 1 to the state_action pair 
-			eta = 1 / (1 + num_updates[hashedObs-1][pi_act]) # computing eta to update the rolling average 
-
-			Vopt = np.max(Q_table[hashedObs][pi_act]) # finding the max value of future reward based on taking the corresponding action 
-
-			Q_table[hashedObs][pi_act] = ((1-eta) * Q_table[hashedObs][pi_act]) + (eta * (reward + gamma*Vopt)) # Q-value update function 
+			num_updates[hashedObsS-1][pi_act] += 1  # adding 1 to the state_action pair 
+			eta = 1 / (1 + num_updates[hashedObsS-1][pi_act]) # computing eta to update the rolling average 
 			
 			obs, reward, done, info = update(pi_act) # move and go back to beginning of loop 
-		
-		if done: # if done == True meaning goal is reached or defeat. This section must be included to incorporate the reward of defeat or the goal state  
-			if hashedObs not in Q_table: # dynamically and parallely initializing Q_table and num_updates table to make sure both align and are set up the same way
-				Q_table[hashedObs] = np.zeros(6)
 
-			num_updates[hashedObs-1][pi_act] += 1 # adding 1 to the state_action pair 
-			eta = 1 / (1 + num_updates[hashedObs-1][pi_act]) # computing eta to update the rolling average
+			hashedObsS_prime = hash(obs)
+			if hashedObsS_prime not in Q_table:
+				Q_table[hashedObsS_prime] = np.zeros(len(env.actions))
 
-			Vopt = np.max(Q_table[hashedObs][pi_act]) # finding the max value of future reward based on taking the corresponding action
+			Vopt = np.max(Q_table[hashedObsS_prime]) # finding the max value of future reward based on taking the corresponding action 
 
-			#print(reward)
+			Q_table[hashedObsS][pi_act] = ((1-eta) * Q_table[hashedObsS][pi_act]) + (eta * (reward + gamma*Vopt)) # Q-value update function
 
-			Q_table[hashedObs][pi_act] = ((1-eta) * Q_table[hashedObs][pi_act]) + (eta * (reward + gamma*Vopt)) # Q-value update function '''
+	return Q_table
 
-
-	return Q_table, num_updates
-
-decay_rate = 0.999999
+'''decay_rate = 0.999999
 
 t0 = time.time()
 
-Q_table, num_updates = Q_learning(num_episodes=1000000, gamma=0.9, epsilon=1, decay_rate=decay_rate) # Run Q-learning
+Q_table = Q_learning(num_episodes=1000000, gamma=0.9, epsilon=1, decay_rate=decay_rate) # Run Q-learning
 
 t1 = time.time()
 howlong = t1-t0
 print(f'Took this much time:', howlong)
 
 print(Q_table)
-print(num_updates)
-print(num_updates[9,:])
 
 # Save the Q-table dict to a file
-with open('Q_table.pickle', 'wb') as handle:
+with open('/Users/justinfeldman/Desktop/CS100 Program1/Q_table.pickle', 'wb') as handle:
     pickle.dump(Q_table, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 '''
-Uncomment the code below to play an episode using the saved Q-table. Useful for debugging/visualization.
+'''Uncomment the code below to play an episode using the saved Q-table. Useful for debugging/visualization.
 
-Comment before final submission or autograder may fail.
+Comment before final submission or autograder may fail.'''
 '''
 gui_flag = True # Set to True to enable the game state visualization
 setup(GUI=gui_flag)
 env = game # Gym environment already initialized within vis_gym.py
 
-Q_table = np.load('Q_table.pickle', allow_pickle=True)
+Q_table = np.load('/Users/justinfeldman/Desktop/CS100 Program1/Q_table.pickle', allow_pickle=True)
 
 obs, reward, done, info = env.reset()
 total_reward = 0
@@ -166,10 +155,14 @@ while not done:
 	total_reward += reward
 	if gui_flag:
  		refresh(obs, reward, done, info)  # Update the game screen [GUI only]
+	
+	print(f'State:', state)
+	print(f'Action:', action)
+	print(f'Obs', obs)
 
 print("Total reward:", total_reward)
 
 # Close the
-env.close() # Close the environment
+env.close() # Close the environment'''
 
 
