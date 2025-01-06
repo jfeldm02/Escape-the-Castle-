@@ -1,4 +1,4 @@
-import time
+#import time
 import numpy as np
 from vis_gym import *
 
@@ -64,55 +64,55 @@ def update(action):
 	obs, reward, done, info = env.step(action)
 	if gui_flag:
 		refresh(obs, reward, done, info) # Update the game screen [GUI only]
-	#print(f"Obs:", obs)
 	return obs, reward, done, info
 
-def estimate_victory_probability(num_episodes= 100000): #100000
+def estimate_victory_probability(num_episodes): #100000
 
-	P = np.zeros(len(env.guards))
-	successFight = np.zeros(len(env.guards), dtype = int)
-	fightEvent = np.zeros(len(env.guards), dtype = int)
-	#guard_location = np.zeros(len(env.guards))
-	#iter = 0
+	
+	successFight = np.zeros(4)
+	fightEvent = np.zeros(4)
+	rewardBefore = 0
+	P = np.zeros(len(successFight))
+	guard_map = {'G1': 0,'G2': 1,'G3': 2,'G4': 3}
 
 	for iter in range(num_episodes):
+		#print(iter)
 		
-		print(iter)
-		env.reset() # initialize game from scratch
-		obs, reward, done, info = update('HIDE')
+		obs, reward, done, info = env.reset() # initialize game from scratch
 
 		while not done: # while episode is still ongoing
-
-			# Move randomly while a guard isn't found :
-			if obs['guard_in_cell'] is None:
-				rand_action = random.choice(env.actions[:4]) 
-				obs, reward, done, info = update(rand_action) # take observations of new state and refresh GUI
-
-			# Guard is found! 
-			elif obs['guard_in_cell'] is not None:
-				guard_map = {'G1': 0,'G2': 1,'G3': 2,'G4': 3} 
+			reward = 0
+			rand_action = env.action_space.sample()
+			
+			
+			'''if obs['guard_in_cell'] is not None:
+				rewardBefore = reward
 				guard = guard_map[obs['guard_in_cell']]
-				rewardBefore = reward # Getting a value to compare hide/fight reward result to 
-				obs, reward, done, info = update('FIGHT') # Fight the guard right away. This function is for the probability of winning in a fight only
+				fightEvent[guard] += 1'''
+
+			if rand_action == 4 and obs['guard_in_cell'] is not None:
+				rewardBefore = reward
+				guard = guard_map[obs['guard_in_cell']]
+				fightEvent[guard] += 1
+				
+				obs, reward, done, info = update(rand_action)
+
+				if reward > rewardBefore:
+					successFight[guard] +=1
 			
-				# Updating P with each potential outcome of the actions 
-				if reward > rewardBefore: # Forcing a fight, and fighting was a success
-					successFight[guard] += 1 
-					fightEvent[guard] += 1
-			
-				elif reward < rewardBefore: # Forcing a fight, and fighting was a failure 
-					fightEvent[guard] += 1 
+			else: 
+				obs, reward, done, info = update(rand_action)
 					
 	for guard in range(len(successFight)): 
-		P[guard] = successFight[guard]/fightEvent[guard]  
+		P[guard] = successFight[guard]/fightEvent[guard] # divide individual guard wins by total individual guard engagements   
 	return P
 
-t0 = time.time()
-P = estimate_victory_probability()
+'''t0 = time.time()
+num_episodes = 100000
+P = estimate_victory_probability(num_episodes)
 actual = [0.2, 0.4, 0.1, 0.3]
 print(f"Probability of beating each guard:", P)
 print(f'Probability of beating the guards should be:', actual)
 t1 = time.time()
 howlong = t1-t0
-print(f'Took this much time:', howlong)
-
+print(f'Took this much time:', howlong)'''
